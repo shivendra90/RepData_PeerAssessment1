@@ -1,0 +1,90 @@
+---
+title: "Programming Assignment 1"
+author: "Shivendra Sharma"
+date: "21 December 2015"
+output: html_document
+---
+This assignment is intended to perform or extract certain measures through data collected by fitness enthusiasts who might want to observe their fitness behaviour and patterns.  The data here has been downloaded from the course website itself and we'll be exploring some statistics associated with it.
+
+Firstly, load the relevant packages, namely dplyr, ggplot2 and knitr.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+Dowload the dataset and store it.
+```{r}
+url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
+download.file(url, destfile = 'activity.zip', method = 'curl')
+```
+
+Read and summarise the dataset to answer questions related to the first part. Necessary changes pertaining to changing the class of the concerned columns is also important.
+```{r, echo = TRUE}
+activity <- read.csv('activity.csv', sep = ',', header = TRUE)
+class(activity$steps)
+activity$steps <-as.numeric(activity$steps)
+class(activity$interval)
+activity$interval <- as.numeric(activity$interval)
+activity$date <- as.Date(activity$date, format = '%Y-%m-%d')
+activity <- mutate(activity, day = weekdays(activity$date))
+```
+
+Calculate total number of steps as instructed in the first part
+```{r}
+sum(activity$steps, na.rm = TRUE)
+```
+
+Calculate mean and median
+```{r}
+mean(activity$steps, na.rm = TRUE)
+median(activity$steps, na.rm = TRUE)
+```
+
+Time for the next section that requires plotting a bar diagram of total steps taken each day. We do this by forming a grouped data frame and subsequently making a simple bar diagram.
+```{r, echo = TRUE}
+grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps))
+```
+# Plot a simple bar diagram with a frequency polygon
+```{r, echo = TRUE}
+ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+```
+
+In this section, we plot a time series of number of average steps taken each day, grouped according to each interval. As we observe, the interval around 580 posesses the maximum number of steps (found out by simple summary() function on the dataset)
+```{r, echo = TRUE}
+group.intervals <- activity %>% group_by(interval) %>% summarise(steps = mean(steps))
+ggplot(group.intervals, aes(x = interval, y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red')
+```
+
+Reporting NA values is rather a simple process but I was confused on replacing the NA values. Since the median found was zero, I replaced the NAs with 0 and made a simple histogram. The differences in values seems to be there.
+```{r, echo = TRUE}
+sum(is.na(activity))
+
+# Replace the NAs with some values. Assuming the median to be 0, replace the NAs with zero
+activity[is.na(activity)] <- 0
+
+# Create the new dataset. Simply copy-paste to replicate exact data with NAs filled up
+revised <- activity
+revised$steps <- as.numeric(revised$steps)
+
+# Create grouped data
+group.revised <- revised %>% group_by(date) %>% summarise(steps = sum(steps))
+
+# Plot a similar histogram with the revised dataset
+ggplot(group.revised, aes(date,steps)) + geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+
+summary(group.revised)
+```
+
+This ection is for the last part. Insert a 'weekdays' column in the activity dataset and make plots according to each day. A simialr pattern for all days is observed.
+```{r, echo = TRUE}
+class(activity$steps)
+activity$steps <- as.numeric(activity$steps)
+day.data <- activity %>% group_by(date) %>% summarise(avg.steps = mean(steps))
+day.data <- mutate(day.data, weekday = weekdays(day.data$date))
+ggplot(activity, aes(x = interval , y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red') + facet_grid(.~day)
+```
+
+End.
+
+Thank you for reading through.
