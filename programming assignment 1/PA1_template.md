@@ -14,14 +14,18 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 ```
-Dowload the dataset and store it.
+
+# Loading and preprocessing the data
+We simply download and store the date set with download.file() function and store it as usual in the functioning directory.
 
 ```r
 url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
 download.file(url, destfile = 'activity.zip', method = 'curl')
 ```
 
-Read and summarise the dataset to answer questions related to the first part. Necessary changes pertaining to changing the class of the concerned columns is also important.
+# Reporting mean and median.
+
+Reporting the mean and median of the whole data is rather a simple step. First convert some columns to proper classes and run mean and median functions to extract some important statistics. Executing the summary() is also another good option. Read the data and do necessary changes as required.
 
 ```r
 activity <- read.csv('activity.csv', sep = ',', header = TRUE)
@@ -59,6 +63,7 @@ sum(activity$steps, na.rm = TRUE)
 
 Calculate mean and median
 
+
 ```r
 mean(activity$steps, na.rm = TRUE)
 ```
@@ -75,15 +80,18 @@ median(activity$steps, na.rm = TRUE)
 ## [1] 0
 ```
 
+So what we have here is 37.38 steps as the average figure (seems like a lazy person!) with 0 as the median. The total steps with the NA values ignored comes out to be some 570,608 steps for the whole data.
+
 Time for the next section that requires plotting a bar diagram of total steps taken each day. We do this by forming a grouped data frame and subsequently making a simple bar diagram.
 
 ```r
-grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps))
+grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps), na.rm = TRUE)
 ```
-# Plot a simple bar diagram with a frequency polygon
+
+Plot a simple bar diagram with a frequency polygon
 
 ```r
-ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity', na.rm = TRUE) + geom_freqpoly(stat = 'identity', colour = 'red')
 ```
 
 ```
@@ -96,18 +104,44 @@ ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(s
 
 ![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
 
+# Reporting average daily pattern
+
 In this section, we plot a time series of number of average steps taken each day, grouped according to each interval. As we observe, the interval around 580 posesses the maximum number of steps (found out by simple summary() function on the dataset)
 
+
 ```r
-group.intervals <- activity %>% group_by(interval) %>% summarise(steps = mean(steps))
-ggplot(group.intervals, aes(x = interval, y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red')
+byInter = group_by(activity, interval)
+inter.final <- summarise(byInter, steps = sum(steps, na.rm = T), mean = mean(steps, na.rm = T), median = median(steps, na.rm = T))
+inter.final
 ```
 
 ```
-## Error in seq.default(from = best$lmin, to = best$lmax, by = best$lstep): 'from' must be of length 1
+## Source: local data frame [288 x 4]
+## 
+##    interval steps mean median
+## 1         0    91   91     91
+## 2         5    18   18     18
+## 3        10     7    7      7
+## 4        15     8    8      8
+## 5        20     4    4      4
+## 6        25   111  111    111
+## 7        30    28   28     28
+## 8        35    46   46     46
+## 9        40     0    0      0
+## 10       45    78   78     78
+## ..      ...   ...  ...    ...
 ```
 
-Reporting NA values is rather a simple process but I was confused on replacing the NA values. Since the median found was zero, I replaced the NAs with 0 and made a simple histogram. The differences in values seems to be there.
+```r
+ggplot(inter.final, aes(x = interval, y = mean)) + geom_freqpoly(stat = 'identity', colour = 'red') + labs(x = 'Interval', y = 'Avg. steps')
+```
+
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+
+# Imputing missing values
+
+Reporting NA values is rather a simple process but I was confused first when replacing them. Since the median found was zero, I replaced those NAs with 0 and made a simple histogram. The differences in values seems to be noticeable
+
 
 ```r
 sum(is.na(activity))
@@ -148,7 +182,9 @@ summary(group.revised)
 ##  Max.   :2012-11-30   Max.   :21194
 ```
 
-This ection is for the last part. Insert a 'weekdays' column in the activity dataset and make plots according to each day. A simialr pattern for all days is observed.
+# Reporting on weedays and weekends
+
+This section is for the last part. Insert a 'weekdays' column in the activity dataset and make plots according to each day. A similar pattern for all days is observed, although Friday and Wednesday seem to report the highest steps with I think the least observed during Thursdays.
 
 ```r
 class(activity$steps)
@@ -167,6 +203,6 @@ ggplot(activity, aes(x = interval , y = steps)) + geom_freqpoly(stat = 'identity
 
 ![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
-End.
+The end.
 
-Thank you for reading through.
+Hope you liked it.

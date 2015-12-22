@@ -13,14 +13,18 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 ```
-Dowload the dataset and store it.
+
+# Loading and preprocessing the data
+We simply download and store the date set with download.file() function and store it as usual in the functioning directory.
 ```{r}
 url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
 download.file(url, destfile = 'activity.zip', method = 'curl')
 ```
 
-Read and summarise the dataset to answer questions related to the first part. Necessary changes pertaining to changing the class of the concerned columns is also important.
-```{r, echo = TRUE}
+# Reporting mean and median.
+
+Reporting the mean and median of the whole data is rather a simple step. First convert some columns to proper classes and run mean and median functions to extract some important statistics. Executing the summary() is also another good option. Read the data and do necessary changes as required.
+```{r}
 activity <- read.csv('activity.csv', sep = ',', header = TRUE)
 class(activity$steps)
 activity$steps <-as.numeric(activity$steps)
@@ -31,33 +35,45 @@ activity <- mutate(activity, day = weekdays(activity$date))
 ```
 
 Calculate total number of steps as instructed in the first part
-```{r}
+```{r, echo = T}
 sum(activity$steps, na.rm = TRUE)
 ```
 
 Calculate mean and median
-```{r}
+
+```{r, echo = T}
 mean(activity$steps, na.rm = TRUE)
 median(activity$steps, na.rm = TRUE)
 ```
 
+So what we have here is 37.38 steps as the average figure (seems like a lazy person!) with 0 as the median. The total steps with the NA values ignored comes out to be some 570,608 steps for the whole data.
+
 Time for the next section that requires plotting a bar diagram of total steps taken each day. We do this by forming a grouped data frame and subsequently making a simple bar diagram.
-```{r, echo = TRUE}
-grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps))
+```{r,}
+grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps), na.rm = TRUE)
 ```
-# Plot a simple bar diagram with a frequency polygon
+
+Plot a simple bar diagram with a frequency polygon
 ```{r, echo = TRUE}
-ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity', na.rm = TRUE) + geom_freqpoly(stat = 'identity', colour = 'red')
 ```
+
+# Reporting average daily pattern
 
 In this section, we plot a time series of number of average steps taken each day, grouped according to each interval. As we observe, the interval around 580 posesses the maximum number of steps (found out by simple summary() function on the dataset)
+
 ```{r, echo = TRUE}
-group.intervals <- activity %>% group_by(interval) %>% summarise(steps = mean(steps))
-ggplot(group.intervals, aes(x = interval, y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red')
+byInter = group_by(activity, interval)
+inter.final <- summarise(byInter, steps = sum(steps, na.rm = T), mean = mean(steps, na.rm = T), median = median(steps, na.rm = T))
+inter.final
+ggplot(inter.final, aes(x = interval, y = mean)) + geom_freqpoly(stat = 'identity', colour = 'red') + labs(x = 'Interval', y = 'Avg. steps')
 ```
 
-Reporting NA values is rather a simple process but I was confused on replacing the NA values. Since the median found was zero, I replaced the NAs with 0 and made a simple histogram. The differences in values seems to be there.
-```{r, echo = TRUE}
+# Imputing missing values
+
+Reporting NA values is rather a simple process but I was confused first when replacing them. Since the median found was zero, I replaced those NAs with 0 and made a simple histogram. The differences in values seems to be noticeable
+
+```{r}
 sum(is.na(activity))
 
 # Replace the NAs with some values. Assuming the median to be 0, replace the NAs with zero
@@ -76,7 +92,9 @@ ggplot(group.revised, aes(date,steps)) + geom_bar(stat = 'identity') + geom_freq
 summary(group.revised)
 ```
 
-This ection is for the last part. Insert a 'weekdays' column in the activity dataset and make plots according to each day. A simialr pattern for all days is observed.
+# Reporting on weedays and weekends
+
+This section is for the last part. Insert a 'weekdays' column in the activity dataset and make plots according to each day. A similar pattern for all days is observed, although Friday and Wednesday seem to report the highest steps with I think the least observed during Thursdays.
 ```{r, echo = TRUE}
 class(activity$steps)
 activity$steps <- as.numeric(activity$steps)
@@ -85,6 +103,6 @@ day.data <- mutate(day.data, weekday = weekdays(day.data$date))
 ggplot(activity, aes(x = interval , y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red') + facet_grid(.~day)
 ```
 
-End.
+The end.
 
-Thank you for reading through.
+Hope you liked it.
