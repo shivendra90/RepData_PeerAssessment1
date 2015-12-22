@@ -26,13 +26,14 @@ grouped <- activity %>% group_by(date) %>% summarise(steps = sum(steps))
 
 # Plot a simple bar diagram with a frequency polygon
 png('plot1.png', 800,600)
-ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+ggplot(grouped, aes(date, steps)) +geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity', colour = 'red')
 
 # Plot timeseries of average steps accoridng to each interval
-group.intervals <- activity %>% group_by(interval) %>% summarise(steps = mean(steps))
+byInter = group_by(activity, interval)
+inter.final <- summarise(byInter, steps = sum(steps, na.rm = T), mean = mean(steps, na.rm = T), median = median(steps, na.rm = T))
+inter.final
 png('plot2.png', 800,600)
-ggplot(group.intervals, aes(x = interval, y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red')
-summary(group.intervals) # To find out the maximum number of steps taken. use the value in subset to find out that interval
+ggplot(inter.final, aes(x = interval, y = mean)) + geom_freqpoly(stat = 'identity', colour = 'red') + labs(x = 'Interval', y = 'Avg. steps')
 
 # Reporting NA values
 sum(is.na(activity))
@@ -49,7 +50,7 @@ group.revised <- revised %>% group_by(date) %>% summarise(steps = sum(steps))
 
 # Plot a similar histogram with the revised dataset
 png('plot3.png', 800,600)
-ggplot(group.revised, aes(date,steps)) + geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity')
+ggplot(group.revised, aes(date,steps)) + geom_bar(stat = 'identity') + geom_freqpoly(stat = 'identity', colour = 'red')
 
 # Insert a 'weekdays' column in the activity dataset and make a plot according to dates
 class(activity$steps)
@@ -57,5 +58,4 @@ activity$steps <- as.numeric(activity$steps)
 day.data <- activity %>% group_by(date) %>% summarise(avg.steps = mean(steps))
 day.data <- mutate(day.data, weekday = weekdays(day.data$date))
 png('plot4.png', 800,600)
-ggplot(day.data, aes(x = date, y = avg.steps)) + geom_freqpoly(stat = 'identity', colour = 'red')
-
+ggplot(activity, aes(x = interval , y = steps)) + geom_freqpoly(stat = 'identity', colour = 'red') + facet_grid(.~day)

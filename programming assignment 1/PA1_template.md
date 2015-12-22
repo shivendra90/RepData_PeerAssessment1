@@ -4,7 +4,7 @@ author: "Shivendra Sharma"
 date: "21 December 2015"
 output: html_document
 ---
-This assignment is intended to perform or extract certain measures through data collected by fitness enthusiasts who might want to observe their fitness behaviour and patterns.  The data here has been downloaded from the course website itself and we'll be exploring some statistics associated with it.
+This assignment is intended to perform or extract certain measures through data collected by fitness enthusiasts who might want to observe their fitness behaviour and patterns.  The data here has been downloaded from the course website itself and we'll be exploring some statistics associated with it. Please note that in case for some reason the images won't show up clearly, I would advise to refer to the image files I uploaded with this assignment in the repositry you are in right now.
 
 Firstly, load the relevant packages, namely dplyr, ggplot2 and knitr.
 
